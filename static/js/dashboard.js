@@ -112,13 +112,21 @@
           var maxRecs = recs.slice(0, 2);
           list.innerHTML = maxRecs.map(function (r) {
             var html = '<div class="rec-item" data-action-id="' + (r.id || '') + '"><h4>' + (r.title || r.id) + '</h4><p>' + (r.description || '') + '</p>';
-            html += '<button type="button" class="btn btn-primary btn-execute" data-action-id="' + (r.id || '') + '">Execute</button></div>';
+            var encodedParams = encodeURIComponent(JSON.stringify(r.params || {}));
+            html += '<button type="button" class="btn btn-primary btn-execute" data-action-id="' + (r.id || '') + '" data-action-params="' + encodedParams + '">Execute</button></div>';
             return html;
           }).join('');
           list.querySelectorAll('.btn-execute').forEach(function (btn) {
             btn.addEventListener('click', function () {
               var actionId = btn.getAttribute('data-action-id');
-              executeIntent(actionId);
+              var params = {};
+              var rawParams = btn.getAttribute('data-action-params');
+              if (rawParams) {
+                try {
+                  params = JSON.parse(decodeURIComponent(rawParams));
+                } catch (_) {}
+              }
+              executeIntent(actionId, params);
             });
           });
         })
@@ -129,7 +137,7 @@
     });
   }
 
-  function executeIntent(actionId) {
+  function executeIntent(actionId, params) {
     var address = getAddress();
     if (!address) {
       showToast('Connect wallet first', 'error');
@@ -138,10 +146,16 @@
     fetch('/api/execute-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: address, action_id: actionId, params: {} })
+      body: JSON.stringify({ address: address, action_id: actionId, params: params || {} })
     })
       .then(function (r) { return r.json(); })
       .then(function (payload) {
+        var demo = payload.demo_execution || {};
+        if (demo.applied) {
+          showToast(demo.message || 'Action executed in demo mode', 'success');
+          loadBalances();
+          return;
+        }
         // In production: pass payload to InterwovenKit to sign/send.
         showToast('TX payload ready — sign in wallet (InterwovenKit)', 'success');
       })

@@ -47,4 +47,5 @@ def execute_intent():
     if not address or action_id is None:
         return jsonify({"error": "address and action_id required"}), 400
     payload = chain_service.build_execute_payload(address, action_id, params)
-    return jsonify(payload)
+    demo_execution = chain_service.execute_action_demo(address, str(action_id), params)
+    return jsonify({**payload, "demo_execution": demo_execution})
