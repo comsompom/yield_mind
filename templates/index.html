@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>YieldMind</h1>
+  <p class="tagline">AI-powered yield optimization on Initia. One place to earn more.</p>
+  <p class="sub">Analyze your wallet, get plain-language recommendations, and execute in one click. No gas tax leakage — value stays on your appchain.</p>
+  <a href="{{ url_for('web.dashboard') }}" class="btn btn-primary btn-lg">Open Dashboard</a>
+</section>
+
+<section class="features">
+  <h2>Why YieldMind</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>AI recommendations</h3>
+      <p>Natural language: &ldquo;Where should I stake?&rdquo; — get 1–3 concrete actions with risk and APY.</p>
+    </div>
+    <div class="feature-card">
+      <h3>One-click execute</h3>
+      <p>Sign and send via InterwovenKit. Optional session UX so you don&rsquo;t sign every single TX.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Initia-native</h3>
+      <p>.init usernames, Interwoven Bridge to bring assets in-app. Revenue from fees on executed actions.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

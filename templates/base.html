@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}YieldMind{% endblock %} — AI-Powered Yield on Initia</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <header class="header">
+    <a href="{{ url_for('web.index') }}" class="logo">YieldMind</a>
+    <nav>
+      <a href="{{ url_for('web.index') }}">Home</a>
+      <a href="{{ url_for('web.dashboard') }}">Dashboard</a>
+    </nav>
+    <div id="wallet-bar" class="wallet-bar">
+      <!-- InterwovenKit wallet connect: connect button, address, .init name -->
+      <div id="wallet-placeholder">
+        <span class="wallet-hint">Connect wallet to use YieldMind</span>
+        <button type="button" id="btn-connect" class="btn btn-primary">Connect Wallet</button>
+      </div>
+      <div id="wallet-connected" class="hidden">
+        <span id="wallet-address" class="wallet-address"></span>
+        <span id="wallet-init-name" class="wallet-init"></span>
+        <button type="button" id="btn-disconnect" class="btn btn-outline">Disconnect</button>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    <p>YieldMind — AI-powered yield optimization on Initia. Built for the Initia Hackathon.</p>
+  </footer>
+  <script src="{{ url_for('static', filename='js/wallet-bridge.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
