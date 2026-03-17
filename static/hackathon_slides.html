@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YieldMind Hackathon Slides</title>
+  <style>
+    :root {
+      --bg-0: #06080f;
+      --bg-1: #0d1322;
+      --panel: rgba(18, 24, 42, 0.78);
+      --panel-border: rgba(137, 157, 255, 0.28);
+      --text: #eaf0ff;
+      --muted: #a8b3d9;
+      --accent: #6e7dff;
+      --accent-2: #2dd4bf;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 600px at 15% 20%, rgba(110, 125, 255, 0.22), transparent 60%),
+        radial-gradient(900px 520px at 85% 78%, rgba(45, 212, 191, 0.18), transparent 55%),
+        linear-gradient(140deg, var(--bg-0), var(--bg-1));
+      overflow: hidden;
+    }
+
+    .deck {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    .slides {
+      position: relative;
+      min-height: 0;
+      padding: 2rem 2rem 1rem;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 2rem 2rem 1rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 60px rgba(2, 6, 23, 0.45);
+      padding: 2.2rem 2.3rem;
+      display: none;
+      overflow: auto;
+    }
+
+    .slide.active {
+      display: block;
+      animation: fadeIn 220ms ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1, h2 {
+      margin: 0 0 0.8rem;
+      line-height: 1.15;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4.2vw, 3.3rem);
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      font-size: clamp(1.45rem, 2.6vw, 2.1rem);
+      letter-spacing: 0.015em;
+    }
+
+    p, li {
+      color: var(--muted);
+      font-size: clamp(1rem, 1.5vw, 1.17rem);
+      line-height: 1.55;
+    }
+
+    ul {
+      margin: 0.8rem 0 0;
+      padding-left: 1.15rem;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 0.7rem;
+      padding: 0.32rem 0.62rem;
+      border: 1px solid rgba(110, 125, 255, 0.45);
+      border-radius: 999px;
+      color: #cdd5ff;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .card {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      padding: 0.85rem 0.95rem;
+      background: rgba(8, 12, 24, 0.55);
+    }
+
+    .card strong {
+      color: #d8e0ff;
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.1rem;
+    }
+
+    .kpi {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      background: rgba(8, 12, 24, 0.55);
+      padding: 0.9rem;
+    }
+
+    .kpi .num {
+      color: #dbeafe;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .kpi .lbl {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .highlight-ok { color: var(--ok); }
+    .highlight-warn { color: var(--warn); }
+
+    .footer {
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(7, 11, 20, 0.7);
+      padding: 0.75rem 1rem 0.9rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 10px;
+      background: #101a33;
+      color: #dbe4ff;
+      padding: 0.5rem 0.85rem;
+      cursor: pointer;
+      font-size: 0.93rem;
+    }
+
+    .btn:hover { border-color: rgba(110, 125, 255, 0.7); }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+
+    .progress-wrap {
+      display: grid;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .progress-text {
+      font-size: 0.86rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .progress {
+      width: 100%;
+      height: 8px;
+      background: rgba(148, 163, 184, 0.22);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 180ms ease;
+    }
+
+    .hint {
+      margin-top: 0.9rem;
+      font-size: 0.84rem;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 920px) {
+      .slide { inset: 1rem 1rem 0.5rem; padding: 1.2rem; }
+      .slides { padding: 1rem 1rem 0.5rem; }
+      .grid, .kpi-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="slides">
+      <section class="slide active">
+        <span class="tag">Initia Hackathon Demo</span>
+        <h1>YieldMind</h1>
+        <p><strong>AI-powered yield optimization on Initia.</strong></p>
+        <p>This video presents a compact end-to-end DeFi assistant flow: connect wallet, get AI recommendations, execute actions, and bridge assets in one screen.</p>
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="num">1 Screen</div>
+            <div class="lbl">No-scroll dashboard UX</div>
+          </div>
+          <div class="kpi">
+            <div class="num">AI + DeFi</div>
+            <div class="lbl">Intent -> action workflow</div>
+          </div>
+          <div class="kpi">
+            <div class="num">Initia-native</div>
+            <div class="lbl">Rollup + InterwovenKit path</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <span class="tag">The Problem</span>
+        <h2>Users do not know where to deploy for yield</h2>
+        <ul>
+          <li>DeFi users struggle to compare APY, risk, and execution complexity.</li>
+          <li>Bridging and transaction steps are fragmented across tools.</li>
+          <li>Most users cannot convert strategy intent into safe actions quickly.</li>
+        </ul>
+        <p class="hint">Impact: opportunity loss, execution mistakes, and low retention.</p>
+      </section>
+
+      <section class="slide">
+        <span class="tag">The Solution</span>
+        <h2>YieldMind: AI assistant for portfolio actions</h2>
+        <div class="grid">
+          <div class="card">
+            <strong>Analyze</strong>
+            <p>Read wallet context + opportunities in a single dashboard.</p>
+          </div>
+          <div class="card">
+            <strong>Recommend</strong>
+            <p>Natural language prompts produce actionable strategy suggestions.</p>
+          </div>
+          <div class="card">
+            <strong>Execute</strong>
+            <p>One-click action flow connected to wallet transaction handling.</p>
+          </div>
+          <div class="card">
+            <strong>Bridge</strong>
+            <p>Move assets into Initia without leaving the product workflow.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Why It Fits Initia</span>
+        <h2>Initia-native architecture</h2>
+        <ul>
+          <li>Rollup launched with chain id <strong class="highlight-ok">yieldmind-1</strong>.</li>
+          <li>Local endpoints configured and running for rapid iteration.</li>
+          <li>InterwovenKit-based wallet path prepared for hackathon-compliant tx UX.</li>
+          <li>Bridge-first UX aligns with cross-ecosystem onboarding goals.</li>
+        </ul>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Live Flow</span>
+        <h2>What judges will see in this demo</h2>
+        <ol>
+          <li>Open dashboard and connect wallet.</li>
+          <li>Enter prompt: <em>"low risk only"</em>.</li>
+          <li>Review AI recommendations with risk/APY context.</li>
+          <li>Execute one recommendation and show result feedback.</li>
+          <li>Preview and submit bridge action from the Bridge panel.</li>
+        </ol>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Technical Proof</span>
+        <h2>Rollup and endpoints</h2>
+        <div class="grid">
+          <div class="card">
+            <strong>Chain ID</strong>
+            <p><code>yieldmind-1</code></p>
+          </div>
+          <div class="card">
+            <strong>REST</strong>
+            <p><code>http://localhost:1317</code></p>
+          </div>
+          <div class="card">
+            <strong>RPC</strong>
+            <p><code>http://localhost:26657</code></p>
+          </div>
+          <div class="card">
+            <strong>gRPC</strong>
+            <p><code>http://localhost:9090</code></p>
+          </div>
+        </div>
+        <p class="hint">Weave launch completed successfully and services were initialized.</p>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Business Case</span>
+        <h2>How this wins users and scales</h2>
+        <ul>
+          <li>Primary monetization: small fee on executed actions.</li>
+          <li>Secondary: premium strategy layer (alerts, advanced routing, automation).</li>
+          <li>Value proposition: lower friction from intent to execution.</li>
+        </ul>
+        <p><strong>Positioning:</strong> practical AI copilot for everyday DeFi on Initia.</p>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Judge Checklist</span>
+        <h2>Submission quality criteria</h2>
+        <ul>
+          <li class="highlight-ok">Clear problem -> solution narrative</li>
+          <li class="highlight-ok">Initia-native integration and rollup proof</li>
+          <li class="highlight-ok">End-to-end product demo flow</li>
+          <li class="highlight-ok">Practical UX, understandable by non-experts</li>
+          <li class="highlight-warn">No seed phrases or sensitive keys shown</li>
+        </ul>
+      </section>
+
+      <section class="slide">
+        <span class="tag">Closing</span>
+        <h2>YieldMind is ready for next-stage growth</h2>
+        <p>We built a compact AI + DeFi experience tailored for Initia users and hackathon expectations: fast, understandable, and execution-oriented.</p>
+        <p><strong>Thank you for reviewing YieldMind.</strong></p>
+        <p class="hint">Next: production wallet signing, real-time chain data expansion, and public deployment.</p>
+      </section>
+    </div>
+
+    <div class="footer">
+      <button id="prevBtn" class="btn" type="button">Previous</button>
+      <div class="progress-wrap">
+        <div id="progressText" class="progress-text">Slide 1 / 9</div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+      <button id="nextBtn" class="btn" type="button">Next</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const progressText = document.getElementById("progressText");
+      const progressBar = document.getElementById("progressBar");
+      let index = 0;
+
+      function render() {
+        slides.forEach((s, i) => s.classList.toggle("active", i === index));
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === slides.length - 1;
+        progressText.textContent = "Slide " + (index + 1) + " / " + slides.length;
+        progressBar.style.width = ((index + 1) / slides.length * 100).toFixed(1) + "%";
+      }
+
+      prevBtn.addEventListener("click", () => {
+        if (index > 0) { index -= 1; render(); }
+      });
+      nextBtn.addEventListener("click", () => {
+        if (index < slides.length - 1) { index += 1; render(); }
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "PageDown") {
+          if (index < slides.length - 1) { index += 1; render(); }
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          if (index > 0) { index -= 1; render(); }
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
+
