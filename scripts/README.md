@@ -3,6 +3,7 @@
 - **setup.ps1** — **Run this first.** One-time setup: creates `.venv`, installs Python deps, copies `.env` from example if missing, copies `.initia/local-ids.md` from example. From repo root: `.\scripts\setup.ps1`
 - **check-prereqs.ps1** — Run on Windows (PowerShell) to check Node, npm, Docker, Go, Python. Use before following [docs/GET_STARTED.md](../docs/GET_STARTED.md).
 - **install-wsl.sh** — Run inside **WSL (Ubuntu)** to install Weave CLI, Go, Rust, jq, lz4, and build-essential. Required for the Initia appchain flow.
+- **weave-fix-minitiad.ps1** — If `weave init` panics with "chmod minitiad: no such file or directory", run this to remove the partial Miniwasm download, then run `weave init` again.
 
 ## Run prereq check (Windows)
 
@@ -45,3 +46,13 @@ C:\Users\obourdo\yield_mind\scripts\weave-init.ps1
    weave init
    ```
    (Use your actual Windows path; in WSL, `C:\Users\obourdo\...` becomes `/mnt/c/Users/obourdo/...`.)
+
+### If `weave init` panics (minitiad: no such file or directory)
+
+Weave can fail when downloading the Miniwasm binary (path/extract issue). Fix and retry:
+
+```powershell
+C:\Users\obourdo\yield_mind\scripts\weave-fix-minitiad.ps1
+```
+
+Then run `weave init` again from your project folder (Option A or B above). If it still fails, try from a **WSL Ubuntu terminal** (Option B) so the download runs in a full Linux environment; or check [Initia Discord/docs](https://docs.initia.xyz/hackathon/get-started) for the latest Weave version.

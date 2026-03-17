@@ -117,6 +117,8 @@ docker rm -f weave-relayer || true
 
 Then run `weave init` again.
 
+**If `weave init` panics with "chmod minitiad: no such file or directory":** The Miniwasm binary download or extract failed. In WSL run `rm -rf ~/.weave/data/miniwasm*`, or from PowerShell run `.\scripts\weave-fix-minitiad.ps1`, then run `weave init` again. If it still fails, try running `weave init` from a full WSL Ubuntu terminal (not via the PowerShell wrapper).
+
 ### IDs to save (checklist)
 
 | What | Where to use it |
