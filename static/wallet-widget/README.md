@@ -1,22 +1,38 @@
 # Wallet widget (InterwovenKit)
 
-This folder is intended for the **minimal InterwovenKit** integration required by the Initia Hackathon.
+This folder contains the React widget used by YieldMind for hackathon wallet connection.
 
-## Requirement
+## What it builds
 
-- Use `@initia/interwovenkit-react` for wallet connection and all transaction handling.
-- Implement: connect/disconnect, display connected address and chain, and at least one real transaction (sign/send via InterwovenKit).
+- Source: `src/main.jsx`
+- Output bundle: `../js/wallet-bridge.js` (loaded by `templates/base.html`)
 
-## Options
+## Install + build
 
-1. **Option A:** Build a small React app (e.g. with Vite) that only mounts the InterwovenKit provider and a "Connect wallet" / address / .init name / sign-send component. Output a single bundle (e.g. `wallet.js`) and include it in `templates/base.html` instead of the current demo `wallet-bridge.js`.
-2. **Option B:** Embed the React widget in an iframe and communicate with the main Flask app via `postMessage` for TX payloads.
+```bash
+cd static/wallet-widget
+npm install
+npm run build
+```
 
-## Current state
+## Run while developing
 
-The main app uses a **demo** wallet bar in `static/js/wallet-bridge.js` (localStorage fake address) so you can run and demo the Flask UI and API without the React stack. Replace this with the real InterwovenKit widget before submission.
+```bash
+cd static/wallet-widget
+npm run dev
+```
+
+This keeps rebuilding `static/js/wallet-bridge.js` on changes.
+
+## Notes
+
+- The widget uses `@initia/interwovenkit-react` with `TESTNET`.
+- It dispatches existing dashboard events:
+  - `yieldmind:wallet-connected`
+  - `yieldmind:wallet-disconnected`
+- You still need a browser wallet extension/app supported by InterwovenKit for actual signing.
 
 ## Docs
 
 - Initia Hackathon: https://docs.initia.xyz/hackathon
-- InterwovenKit: https://www.npmjs.com/package/@initia/interwovenkit-react
+- InterwovenKit docs: https://docs.initia.xyz/interwovenkit
