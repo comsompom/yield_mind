@@ -1,42 +1,83 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+{% block html_class %}page-dashboard{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
 
 {% block content %}
-<section class="dashboard">
-  <h1>Dashboard</h1>
-  <p class="dashboard-hint">Connect your wallet to see balances and AI yield recommendations.</p>
-
-  <div id="dashboard-content" class="dashboard-content">
-    <div class="panel balances-panel">
-      <h2>Balances</h2>
-      <div id="balances-list">— Connect wallet —</div>
+<section class="dashboard dashboard--single-screen">
+  <div class="dashboard__toolbar">
+    <button type="button" id="btn-help-open" class="btn btn-outline btn-help">How to use</button>
+  </div>
+  <!-- One screen, 2x2: top row = Balances | Top opportunities, bottom row = Ask for recommendations | Bridge -->
+  <div class="dashboard__grid">
+    <div class="dashboard__card dashboard__card--balances">
+      <h2 class="dashboard__card-title">Balances</h2>
+      <div id="balances-list" class="dashboard__list dashboard__list--compact">Connect wallet to see balance</div>
     </div>
-
-    <div class="panel opportunities-panel">
-      <h2>Top opportunities</h2>
-      <div id="opportunities-list">
+    <div class="dashboard__card dashboard__card--opportunities">
+      <h2 class="dashboard__card-title">Top opportunities</h2>
+      <div id="opportunities-list" class="dashboard__list dashboard__list--compact">
         <p class="loading">Loading…</p>
       </div>
     </div>
-
-    <div class="panel recommend-panel">
-      <h2>Ask for recommendations</h2>
-      <form id="recommend-form" class="recommend-form">
-        <input type="text" id="recommend-message" name="message" placeholder="e.g. I want low risk" class="input">
-        <button type="submit" class="btn btn-primary">Get recommendations</button>
+    <div class="dashboard__card dashboard__card--recommend">
+      <h2 class="dashboard__card-title">Ask for recommendations</h2>
+      <form id="recommend-form" class="dashboard__form">
+        <input type="text" id="recommend-message" name="message" placeholder="e.g. low risk" class="dashboard__input" aria-label="Your preference">
+        <button type="submit" class="btn btn-primary">Suggest</button>
       </form>
-      <div id="recommendations-list" class="recommendations-list"></div>
+      <p class="dashboard__prompt-hint muted">Examples: "low risk only" · "best APY under medium risk" · "stablecoin strategy"</p>
+      <div id="recommendations-list" class="dashboard__rec-list"></div>
     </div>
+    <div class="dashboard__card dashboard__card--bridge">
+      <h2 class="dashboard__card-title">Bridge</h2>
+      <p class="dashboard__card-desc">Move assets to Initia testnet in 3 quick steps.</p>
+      <form id="bridge-form" class="bridge-form">
+        <div class="bridge-row">
+          <label class="bridge-label" for="bridge-from-chain">From</label>
+          <select id="bridge-from-chain" class="dashboard__input bridge-select">
+            <option value="ethereum">Ethereum</option>
+            <option value="arbitrum">Arbitrum</option>
+            <option value="cosmoshub">Cosmos Hub</option>
+          </select>
+          <label class="bridge-label" for="bridge-asset">Asset</label>
+          <select id="bridge-asset" class="dashboard__input bridge-select">
+            <option value="USDC">USDC</option>
+            <option value="INIT">INIT</option>
+          </select>
+        </div>
+        <div class="bridge-row">
+          <label class="bridge-label" for="bridge-amount">Amount</label>
+          <input id="bridge-amount" class="dashboard__input" type="number" min="0" step="0.0001" placeholder="0.00">
+          <label class="bridge-label" for="bridge-destination">To</label>
+          <input id="bridge-destination" class="dashboard__input" type="text" placeholder="Initia address">
+        </div>
+        <div class="bridge-actions">
+          <button type="button" id="btn-bridge-preview" class="btn btn-outline">Preview</button>
+          <button type="submit" id="btn-bridge" class="btn btn-primary">Bridge in</button>
+        </div>
+      </form>
+      <div id="bridge-summary" class="bridge-summary muted">Fill bridge details, then click Preview.</div>
+    </div>
+  </div>
 
-    <div class="panel bridge-panel">
-      <h2>Bridge in</h2>
-      <p>Use Interwoven Bridge to bring assets from other chains into Initia.</p>
-      <button type="button" id="btn-bridge" class="btn btn-outline">Open Bridge</button>
+  <div id="help-modal" class="help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="help-modal__panel">
+      <div class="help-modal__head">
+        <h3 id="help-modal-title">Quick dashboard guide</h3>
+        <button type="button" id="btn-help-close" class="btn btn-outline">Close</button>
+      </div>
+      <ul class="help-modal__list">
+        <li><strong>Balances:</strong> check your INIT and USDC wallet balances.</li>
+        <li><strong>Top opportunities:</strong> compare APY and risk before taking action.</li>
+        <li><strong>Ask for recommendations:</strong> enter your preference (ex: low risk) and click Suggest.</li>
+        <li><strong>Bridge:</strong> choose source chain, asset, amount, destination, then Preview and Bridge in.</li>
+      </ul>
     </div>
   </div>
 </section>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/dashboard.js', v='20260317d') }}" defer></script>
 {% endblock %}

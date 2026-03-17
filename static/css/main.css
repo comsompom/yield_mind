@@ -24,6 +24,20 @@ body {
   min-height: 100vh;
 }
 
+/* Dashboard: one screen only — lock viewport, no scroll */
+html.page-dashboard {
+  height: 100%;
+  overflow: hidden;
+}
+
+html.page-dashboard body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -120,6 +134,35 @@ body {
   padding: 2rem 1.5rem;
 }
 
+/* Dashboard: single-screen layout */
+.page-dashboard .header {
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+}
+
+.page-dashboard .main {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  padding: 0.4rem 0.6rem;
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-dashboard .main > * {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-dashboard .footer {
+  display: none;
+}
+
 .hero {
   text-align: center;
   padding: 3rem 0;
@@ -192,6 +235,342 @@ body {
   gap: 1.5rem;
 }
 
+/* Legacy dashboard markup fallback:
+   If an older template is still served, force it into the same one-screen 2x2 grid. */
+.page-dashboard .dashboard:not(.dashboard--single-screen) {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) h1,
+.page-dashboard .dashboard:not(.dashboard--single-screen) .dashboard-hint {
+  display: none;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.4rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .dashboard-content > .panel {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .panel h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .recommend-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .input {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.page-dashboard .dashboard:not(.dashboard--single-screen) .recommendations-list,
+.page-dashboard .dashboard:not(.dashboard--single-screen) #balances-list,
+.page-dashboard .dashboard:not(.dashboard--single-screen) #opportunities-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Single-screen dashboard: table-like 2x2 grid, no page scroll */
+.dashboard--single-screen {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+
+.btn-help {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.dashboard--single-screen .dashboard__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.4rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  align-content: stretch;
+}
+
+.dashboard__card {
+  background: linear-gradient(180deg, #1b1c24 0%, #171821 100%);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.dashboard__card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  color: #d7dbe8;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard__card-desc {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin: 0 0 0.25rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.dashboard__card .btn {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dashboard__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-size: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-dashboard .dashboard__list p.loading {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.dashboard__list--compact .rec-item,
+.dashboard__list--compact .balance-row {
+  display: grid;
+  align-items: center;
+  padding: 0.26rem 0.4rem;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 4px;
+  font-size: 0.76rem;
+  background: rgba(10, 12, 18, 0.75);
+  margin-bottom: 0.22rem;
+}
+
+.dashboard__list--compact .rec-item:last-child,
+.dashboard__list--compact .balance-row:last-child {
+  margin-bottom: 0;
+}
+
+#balances-list .balance-row {
+  grid-template-columns: 90px 140px;
+  column-gap: 0.5rem;
+  justify-content: start;
+  max-width: 260px;
+}
+
+#balances-list .cell-asset {
+  color: #d7dbe8;
+  letter-spacing: 0.02em;
+}
+
+#balances-list .cell-amount {
+  text-align: right;
+  color: #f5f7ff;
+  font-variant-numeric: tabular-nums;
+}
+
+#opportunities-list .rec-item {
+  grid-template-columns: minmax(140px, 1fr) 64px 70px;
+  column-gap: 0.5rem;
+}
+
+#opportunities-list .cell-pair {
+  color: #dde1ee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#opportunities-list .cell-apy {
+  text-align: right;
+  color: #9fb2ff;
+  font-variant-numeric: tabular-nums;
+}
+
+#opportunities-list .cell-risk {
+  text-align: right;
+  color: #97a0b8;
+  text-transform: lowercase;
+}
+
+.dashboard__form {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+
+.dashboard__prompt-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: #9da5bb;
+}
+
+.dashboard__input {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.dashboard__rec-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard__rec-list .rec-item {
+  padding: 0.3rem 0;
+  margin-bottom: 0.2rem;
+  background: var(--bg);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.dashboard__rec-list .rec-item h4 { margin: 0 0 0.1rem; font-size: 0.8rem; }
+.dashboard__rec-list .rec-item p { margin: 0 0 0.15rem; color: var(--muted); font-size: 0.7rem; line-height: 1.2; }
+.dashboard__rec-list .rec-item .btn-execute { padding: 0.2rem 0.4rem; font-size: 0.7rem; }
+
+.bridge-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bridge-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 34px 1fr;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.bridge-label {
+  font-size: 0.66rem;
+  color: #9ea7bf;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bridge-select {
+  padding-right: 0.25rem;
+}
+
+.bridge-actions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.bridge-summary {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 4px;
+  background: rgba(10, 12, 18, 0.55);
+}
+
+.bridge-summary.ready {
+  color: #c8d0e8;
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.help-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 14, 0.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.help-modal__panel {
+  width: min(560px, 92vw);
+  background: #161922;
+  border: 1px solid #2f3550;
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.help-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.help-modal__head h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #e6e9f4;
+}
+
+.help-modal__list {
+  margin: 0;
+  padding-left: 1rem;
+  color: #b7bfd7;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .panel {
   padding: 1.5rem;
   background: var(--surface);
@@ -238,6 +617,13 @@ body {
 
 .loading {
   color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .footer {
