@@ -30,9 +30,25 @@ YieldMind is an AI assistant that:
 
 ## Initia Hackathon Setup (do this first)
 
+**Full step-by-step:** See **[docs/GET_STARTED.md](docs/GET_STARTED.md)** — aligned with [Initia Hackathon: Get Started](https://docs.initia.xyz/hackathon/get-started).
+
+**Save your IDs:** When you run `weave init`, copy [.initia/local-ids.example.md](.initia/local-ids.example.md) to `.initia/local-ids.md` and fill in your **Gas Station address** and **rollup chain ID**. You need the chain ID for `.env` and for submission (see the [get-started docs](https://docs.initia.xyz/hackathon/get-started)).
+
+**Quick checks:** Run `.\scripts\check-prereqs.ps1` (Windows) to verify Node, Docker, Go, Python.
+
+**On Windows:** Weave CLI supports Linux/macOS only. Use **WSL** to run `weave init` and the appchain; then point YieldMind `.env` to your rollup RPC (e.g. `http://localhost:26657`).
+
 Follow these steps once to get your dev environment and chain ready. No API keys from Initia — you get a Gas Station account and use public RPC or your rollup’s RPC.
 
-### 1. Use the hackathon flow
+### 1. Install AI skill (optional but recommended)
+
+```bash
+npx skills add initia-labs/agent-skills
+```
+
+Select **Cursor** when prompted. This adds the `initia-appchain-dev` skill so your AI can help set up the Wasm environment and Weave.
+
+### 2. Use the hackathon flow
 
 - **Install Weave CLI** and the Initia tooling (see [Initia Hackathon Guide](https://docs.initia.xyz/hackathon)).
 - In a dedicated project folder (e.g. `my-initia-project`), run:
@@ -49,12 +65,13 @@ Follow these steps once to get your dev environment and chain ready. No API keys
   - **System keys:** Generate new. **Add Gas Station to genesis:** Yes. Genesis balance: e.g. `1000000000000000000000000` (or `10000000000000000000` for Move to avoid u64 limits).
 - Finish the flow; your appchain launches. You now have a **Gas Station account** (address + mnemonic). That’s your dev account — no separate “registration” or API keys from Initia.
 
-### 2. Fund your Gas Station account
+### 3. Fund your Gas Station
+
 
 - Go to **[Initia Testnet Faucet](https://app.testnet.initia.xyz/faucet)**.
 - Paste your **Gas Station address**, submit, and receive testnet INIT. No signup or API key.
 
-### 3. RPC / endpoints
+### 4. RPC / endpoints (for .env)
 
 - **Initia L1 Testnet:**  
   - RPC: `https://rpc.testnet.initia.xyz`  
