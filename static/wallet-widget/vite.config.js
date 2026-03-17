@@ -3,6 +3,11 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: "globalThis",
+    "process.env": {},
+    process: { env: {} },
+  },
   build: {
     lib: {
       entry: "src/main.jsx",
@@ -13,7 +18,7 @@ export default defineConfig({
     outDir: "../js",
     emptyOutDir: false,
     sourcemap: false,
-    target: "es2018",
+    target: "es2020",
   },
 });
 

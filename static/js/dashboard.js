@@ -6,6 +6,11 @@
   function getAddress() {
     const el = document.getElementById('wallet-address');
     if (!el) return null;
+    if (window.__yieldmindWalletAddress) {
+      return window.__yieldmindWalletAddress;
+    }
+    var fromAttr = el.getAttribute('data-full-address');
+    if (fromAttr) return fromAttr;
     const stored = localStorage.getItem('yieldmind_wallet_demo');
     if (stored) {
       try {
@@ -275,6 +280,10 @@
 
   window.addEventListener('yieldmind:wallet-connected', loadBalances);
   window.addEventListener('yieldmind:wallet-connected', syncBridgeDestination);
+  window.addEventListener('yieldmind:wallet-error', function (e) {
+    var msg = (e && e.detail && e.detail.message) ? e.detail.message : 'Wallet connection failed';
+    showToast(msg, 'error');
+  });
   window.addEventListener('yieldmind:wallet-disconnected', function () {
     var list = document.getElementById('balances-list');
     if (list) {

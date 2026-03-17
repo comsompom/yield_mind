@@ -153,6 +153,25 @@ gunicorn -w 4 "run:app"
 
 The repo includes a **demo** wallet bar (fake address in localStorage) so you can run the UI and API without the React stack. For submission, replace it with the real **InterwovenKit** integration: see `static/wallet-widget/README.md`. Build the minimal React widget and include the bundle in the Flask app for connect, .init name, and sign/send.
 
+### Wallet setup (hackathon)
+
+Use an Initia-compatible wallet (recommended: **Keplr**) with the InterwovenKit widget.
+
+1. Install wallet extension from the official site: [https://www.keplr.app/](https://www.keplr.app/)
+2. Create or import a wallet account in the extension
+3. Unlock the extension and keep it unlocked while testing
+4. Open YieldMind dashboard and click **Connect Wallet**
+5. Approve the connection request in the wallet popup
+6. Confirm the wallet address appears in the top bar
+
+If you need test funds, use the faucet: [https://app.testnet.initia.xyz/faucet](https://app.testnet.initia.xyz/faucet)
+
+Troubleshooting:
+
+- If no popup appears, hard refresh (`Ctrl+F5`) and try again
+- Make sure popups are allowed for `127.0.0.1`
+- Ensure browser extensions are enabled in the current profile/window
+
 ## Submission
 
 - **Rollup / appchain:** Valid chain ID and a transaction link or deployment link (fill in README and `.initia/submission.json` after deployment).
