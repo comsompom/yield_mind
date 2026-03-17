@@ -83,7 +83,10 @@ Using the `initia-appchain-dev` skill, please verify that `initiad`, `weave`, an
 
 **Save IDs as you go.** Copy [`.initia/local-ids.example.md`](../.initia/local-ids.example.md) to `.initia/local-ids.md` and fill it in during this step and the next. Per the [official get-started guide](https://docs.initia.xyz/hackathon/get-started): *"Save your Chain ID! You'll need this unique identifier for your final submission."*
 
-Run this in a **terminal** (WSL on Windows):
+**Important:** `weave` is installed only in **WSL (Ubuntu)**, not in Windows PowerShell. So you must either:
+
+- **From PowerShell:** run `.\scripts\weave-init.ps1` from your project folder (this starts WSL and runs `weave init` there), or  
+- **From a WSL/Ubuntu terminal:** run `source ~/.bashrc`, then `cd /mnt/c/Users/.../your-project`, then `weave init`.
 
 ```bash
 weave init

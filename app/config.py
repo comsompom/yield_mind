@@ -2,8 +2,11 @@
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+from dotenv import load_dotenv
 
+# Load .env from project root so Config reads it
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 def _env(key: str, default: str = "") -> str:
     return os.environ.get(key, default).strip()
@@ -25,5 +28,8 @@ class Config:
     AI_MODEL = _env("AI_MODEL", "gpt-4o-mini")
 
     # Revenue: fee rate on executed actions (e.g. 0.001 = 0.1%)
-    FEE_RATE = float(_env("FEE_RATE", "0.002"))
+    try:
+        FEE_RATE = float(_env("FEE_RATE") or "0.002")
+    except ValueError:
+        FEE_RATE = 0.002
     FEE_RECIPIENT = _env("FEE_RECIPIENT", "")

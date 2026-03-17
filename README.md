@@ -95,12 +95,24 @@ Set these in `.env` (see below). For YieldMind you can start with L1 testnet; sw
 
 ### Setup
 
+**Option A — One command (recommended):**
+
+```powershell
+cd yield_mind
+.\scripts\setup.ps1
+```
+
+This creates `.venv`, installs dependencies, copies `.env` and `.initia/local-ids.md` from examples if missing, and verifies the app.
+
+**Option B — Manual:**
+
 ```bash
 cd yield_mind
 python -m venv .venv
 .venv\Scripts\activate   # Windows
 # source .venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
+cp .env.example .env     # if .env does not exist
 ```
 
 ### Environment
