@@ -18,6 +18,9 @@ fix_layout() {
   local root="$1"
   local ver="$2"
   local nested="$root/${ver}"
+  if [ -f "$root/minitiad" ]; then
+    chmod +x "$root/minitiad" || true
+  fi
   if [ -f "$root/minitiad" ] && [ ! -f "$nested/minitiad" ]; then
     mkdir -p "$nested"
     ln -sf ../minitiad "$nested/minitiad"
@@ -25,6 +28,9 @@ fix_layout() {
   if [ -f "$root/libwasmvm.x86_64.so" ] && [ ! -f "$nested/libwasmvm.x86_64.so" ]; then
     mkdir -p "$nested"
     ln -sf ../libwasmvm.x86_64.so "$nested/libwasmvm.x86_64.so"
+  fi
+  if [ -f "$nested/minitiad" ]; then
+    chmod +x "$nested/minitiad" || true
   fi
 }
 
