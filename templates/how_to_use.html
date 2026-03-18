@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}How to use{% endblock %}
+
+{% block content %}
+<section class="guide">
+  <h1>How to use YieldMind</h1>
+  <p class="guide__intro">
+    YieldMind helps you analyze opportunities, execute operations, and track actions in one flow.
+    This page summarizes what you can achieve and how to use each function.
+  </p>
+
+  <div class="guide__grid">
+    <article class="guide__card">
+      <h2>What you can achieve</h2>
+      <ul class="guide__list">
+        <li>Compare wallet balances and best opportunities by APY and risk.</li>
+        <li>Bridge assets into Initia and send tokens directly from the app.</li>
+        <li>Get AI recommendations with reasoning and trend context.</li>
+        <li>Track your operations in transaction history for demo and review.</li>
+      </ul>
+    </article>
+
+    <article class="guide__card">
+      <h2>Quick start</h2>
+      <ol class="guide__list guide__list--ordered">
+        <li>Connect your Initia-compatible wallet in the top-right corner.</li>
+        <li>Open <strong>Dashboard</strong> to review balances and top opportunities.</li>
+        <li>Use <strong>Operations</strong> for Send, Bridge, and transaction history.</li>
+        <li>Use <strong>AI Recommendations</strong> to ask strategy questions and execute ideas.</li>
+      </ol>
+    </article>
+  </div>
+
+  <section class="guide__section">
+    <h2>Functions summary</h2>
+    <div class="guide__table">
+      <div class="guide__row guide__row--head">
+        <span>Page / Function</span>
+        <span>What it does</span>
+        <span>What user can do</span>
+      </div>
+      <div class="guide__row">
+        <span>Dashboard</span>
+        <span>Portfolio overview and APY comparison chart.</span>
+        <span>Identify best opportunities quickly.</span>
+      </div>
+      <div class="guide__row">
+        <span>Operations / Send</span>
+        <span>Transfer INIT to any valid address.</span>
+        <span>Input recipient + amount, sign, get tx hash.</span>
+      </div>
+      <div class="guide__row">
+        <span>Operations / Bridge</span>
+        <span>Prepare bridge-in flow from source chain to Initia.</span>
+        <span>Preview route, submit bridge, track status.</span>
+      </div>
+      <div class="guide__row">
+        <span>Operations / Transaction history</span>
+        <span>Recent actions list with status and explorer links.</span>
+        <span>Verify each operation and present proof.</span>
+      </div>
+      <div class="guide__row">
+        <span>AI Recommendations</span>
+        <span>Prompt-based suggestions with prediction chart support.</span>
+        <span>Request strategy, inspect reasoning trend, execute suggestion.</span>
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}
+

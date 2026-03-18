@@ -1,11 +1,17 @@
 """Chain and data layer: balances, pools, opportunities, TX payloads."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import json
+from urllib import error as urllib_error
+from urllib import request as urllib_request
+
 from flask import current_app
 
 # In-memory demo portfolio state by address. This lets the dashboard show
 # balance changes after "Execute" actions even before real chain integration.
 _DEMO_PORTFOLIOS: dict[str, dict[str, int]] = {}
+_TX_HISTORY: dict[str, list[dict]] = {}
 
 
 def _get_portfolio(address: str) -> dict[str, int]:
@@ -32,6 +38,10 @@ def _portfolio_to_balances(portfolio: dict[str, int]) -> list[dict]:
             continue
         rows.append({"denom": denom, "amount": str(amount), "symbol": symbol})
     return rows
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def get_balances(address: str) -> dict:
@@ -70,6 +80,26 @@ def get_opportunities() -> list:
     ]
 
 
+def get_opportunity_history() -> dict:
+    """Stub historical series for charting and recommendation justification."""
+    labels = ["D-6", "D-5", "D-4", "D-3", "D-2", "D-1", "Today"]
+    return {
+        "labels": labels,
+        "series": [
+            {
+                "id": "pool_staking_1",
+                "name": "Initia Staking",
+                "points": [10.8, 11.2, 11.6, 12.0, 12.2, 12.4, 12.5],
+            },
+            {
+                "id": "pool_lp_1",
+                "name": "INIT/USDC LP",
+                "points": [16.4, 16.8, 17.2, 17.7, 18.0, 18.1, 18.2],
+            },
+        ],
+    }
+
+
 def build_execute_payload(address: str, action_id: str, params: dict) -> dict:
     """Build encoded TX payload for wallet (InterwovenKit) to sign/send."""
     # TODO: use Initia SDK to build real Msg; return serialized payload
@@ -102,6 +132,15 @@ def execute_action_demo(address: str, action_id: str, params: dict | None = None
             return {"applied": False, "message": "Not enough INIT to stake", "balances": get_balances(address)}
         portfolio["INIT"] = init_balance - move_amount
         portfolio["stINIT"] = int(portfolio.get("stINIT", 0)) + move_amount
+        append_tx_history(
+            address,
+            {
+                "kind": "recommendation",
+                "status": "success",
+                "network": "demo",
+                "details": {"action_id": action_id, "amount_pct": amount_pct},
+            },
+        )
         return {
             "applied": True,
             "message": f"Staked {move_amount} INIT ({amount_pct}%) in demo mode",
@@ -120,6 +159,15 @@ def execute_action_demo(address: str, action_id: str, params: dict | None = None
         portfolio["INIT"] = init_balance - init_to_lp
         portfolio["USDC"] = usdc_balance - usdc_to_lp
         portfolio["INIT-USDC-LP"] = int(portfolio.get("INIT-USDC-LP", 0)) + min(init_to_lp, usdc_to_lp)
+        append_tx_history(
+            address,
+            {
+                "kind": "recommendation",
+                "status": "success",
+                "network": "demo",
+                "details": {"action_id": action_id, "amount_pct": amount_pct},
+            },
+        )
         return {
             "applied": True,
             "message": "Added INIT/USDC liquidity in demo mode",
@@ -138,6 +186,15 @@ def execute_action_demo(address: str, action_id: str, params: dict | None = None
         if asset not in ("USDC", "INIT"):
             return {"applied": False, "message": "Unsupported bridge asset in demo mode", "balances": get_balances(address)}
         portfolio[asset] = int(portfolio.get(asset, 0)) + amount_units
+        append_tx_history(
+            address,
+            {
+                "kind": "bridge",
+                "status": "success",
+                "network": "demo",
+                "details": {"asset": asset, "amount": raw_amount},
+            },
+        )
         return {
             "applied": True,
             "message": f"Bridged {raw_amount} {asset} to Initia (demo mode)",
@@ -145,3 +202,45 @@ def execute_action_demo(address: str, action_id: str, params: dict | None = None
         }
 
     return {"applied": False, "message": "Action supported only as payload preview", "balances": get_balances(address)}
+
+
+def append_tx_history(address: str, tx: dict) -> dict:
+    """Add transaction entry for a wallet address."""
+    entries = _TX_HISTORY.setdefault(address, [])
+    entry = {
+        "kind": tx.get("kind", "action"),
+        "status": tx.get("status", "pending"),
+        "tx_hash": tx.get("tx_hash", ""),
+        "network": tx.get("network", "demo"),
+        "details": tx.get("details", {}),
+        "time": tx.get("time") or _now_iso(),
+    }
+    entries.insert(0, entry)
+    _TX_HISTORY[address] = entries[:100]
+    return entry
+
+
+def get_tx_history(address: str) -> list[dict]:
+    """Get recent tx history for address."""
+    return _TX_HISTORY.get(address, [])
+
+
+def lookup_tx_on_testnet(tx_hash: str) -> dict:
+    """Check if tx hash exists on Initia testnet LCD."""
+    normalized = (tx_hash or "").strip().upper()
+    if len(normalized) != 64 or any(ch not in "0123456789ABCDEF" for ch in normalized):
+        return {"exists": False, "reason": "invalid_hash"}
+
+    url = f"https://lcd.testnet.initia.xyz/cosmos/tx/v1beta1/txs/{normalized}"
+    req = urllib_request.Request(url, headers={"Accept": "application/json"})
+    try:
+        with urllib_request.urlopen(req, timeout=8) as resp:
+            body = resp.read().decode("utf-8")
+            data = json.loads(body) if body else {}
+            return {"exists": bool(data.get("tx_response")), "reason": "found"}
+    except urllib_error.HTTPError as exc:
+        if exc.code == 404:
+            return {"exists": False, "reason": "not_found"}
+        return {"exists": False, "reason": f"http_{exc.code}"}
+    except Exception:
+        return {"exists": False, "reason": "lookup_failed"}

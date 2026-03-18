@@ -1,298 +1,112 @@
 /**
- * Dashboard: load balances, opportunities, submit recommend form, execute intent.
- * Wallet address is read from the wallet bar (or demo storage) for API calls.
+ * Dashboard page: balances + top opportunities + APY chart.
  */
 (function () {
   function getAddress() {
-    const el = document.getElementById('wallet-address');
+    if (window.__yieldmindWalletAddress) return window.__yieldmindWalletAddress;
+    var el = document.getElementById('wallet-address');
     if (!el) return null;
-    if (window.__yieldmindWalletAddress) {
-      return window.__yieldmindWalletAddress;
-    }
     var fromAttr = el.getAttribute('data-full-address');
-    if (fromAttr) return fromAttr;
-    const stored = localStorage.getItem('yieldmind_wallet_demo');
-    if (stored) {
-      try {
-        const o = JSON.parse(stored);
-        return o && o.address ? o.address : null;
-      } catch (_) {}
-    }
-    return null;
+    return fromAttr || null;
   }
 
-  function showToast(message, type) {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    const t = document.createElement('div');
-    t.className = 'toast ' + (type || '');
-    t.textContent = message;
-    document.body.appendChild(t);
-    setTimeout(function () { t.remove(); }, 4000);
+  function loadBalances() {
+    var list = document.getElementById('balances-list');
+    var address = getAddress();
+    if (!list) return;
+    if (!address) {
+      list.textContent = 'Connect wallet to see balance';
+      return;
+    }
+    list.innerHTML = '<p class="loading">Loading...</p>';
+    fetch('/api/balances?address=' + encodeURIComponent(address))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var items = (data.balances || []).slice(0, 6);
+        if (!items.length) {
+          list.innerHTML = '<p class="loading">No balances</p>';
+          return;
+        }
+        list.innerHTML = items.map(function (b) {
+          return '<div class="balance-row"><span class="cell-asset">' + (b.symbol || b.denom) + '</span><span class="cell-amount">' + (b.amount || '0') + '</span></div>';
+        }).join('');
+      })
+      .catch(function () {
+        list.innerHTML = '<p class="loading">Failed to load</p>';
+      });
+  }
+
+  function drawOpportunitiesChart(items) {
+    var canvas = document.getElementById('opportunities-chart');
+    if (!canvas || !items || !items.length) return;
+    var note = document.getElementById('opportunities-chart-note');
+    var ctx = canvas.getContext('2d');
+    var width = canvas.width;
+    var height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    var values = items.map(function (o) { return Number(o.apy || 0); });
+    var maxVal = Math.max.apply(null, values.concat([1]));
+    var barW = Math.max(90, Math.floor((width - 120) / items.length));
+    var gap = 30;
+    var startX = 50;
+    var baseY = height - 40;
+
+    ctx.fillStyle = '#8fa3ff';
+    ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+    ctx.beginPath();
+    ctx.moveTo(35, 15);
+    ctx.lineTo(35, baseY);
+    ctx.lineTo(width - 20, baseY);
+    ctx.stroke();
+
+    items.forEach(function (o, i) {
+      var value = Number(o.apy || 0);
+      var h = Math.max(8, Math.round((value / maxVal) * (height - 80)));
+      var x = startX + i * (barW + gap);
+      var y = baseY - h;
+      ctx.fillStyle = '#6472ff';
+      ctx.fillRect(x, y, barW, h);
+      ctx.fillStyle = '#c7d2fe';
+      ctx.font = '14px sans-serif';
+      ctx.fillText((value || 0).toFixed(1) + '%', x + 8, y - 8);
+      ctx.fillStyle = '#9fb0d8';
+      ctx.font = '13px sans-serif';
+      var label = (o.name || o.id || '').slice(0, 18);
+      ctx.fillText(label, x + 4, baseY + 18);
+    });
+
+    if (note) {
+      var top = items.reduce(function (acc, it) {
+        return Number(it.apy || 0) > Number(acc.apy || 0) ? it : acc;
+      }, items[0]);
+      note.textContent = 'Highest APY currently: ' + (top.name || top.id) + ' (' + (top.apy || '0') + '%)';
+    }
   }
 
   function loadOpportunities() {
-    const list = document.getElementById('opportunities-list');
+    var list = document.getElementById('opportunities-list');
     if (!list) return;
     fetch('/api/opportunities')
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        if (Array.isArray(data)) {
-          var items = data.slice(0, 3);
-          list.innerHTML = items.map(function (o) {
-            var apy = (o.apy !== undefined && o.apy !== null) ? o.apy + '%' : '--';
-            var risk = o.risk || 'n/a';
-            return '<div class="rec-item">'
-              + '<span class="cell-pair">' + (o.name || o.id) + '</span>'
-              + '<span class="cell-apy">' + apy + '</span>'
-              + '<span class="cell-risk">' + risk + '</span>'
-              + '</div>';
-          }).join('');
-        } else {
+        var items = Array.isArray(data) ? data.slice(0, 4) : [];
+        if (!items.length) {
           list.innerHTML = '<p class="loading">No opportunities</p>';
-        }
-      })
-      .catch(function () {
-        list.innerHTML = '<p class="loading">Failed to load</p>';
-      });
-  }
-
-  function loadBalances() {
-    const list = document.getElementById('balances-list');
-    const address = getAddress();
-    if (!list) return;
-    if (!address) {
-      list.textContent = 'Connect wallet to see balance';
-      list.className = 'dashboard__list dashboard__list--compact';
-      return;
-    }
-    list.innerHTML = '<p class="loading">Loading…</p>';
-    list.className = 'dashboard__list dashboard__list--compact';
-    fetch('/api/balances?address=' + encodeURIComponent(address))
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.balances && data.balances.length) {
-          var items = data.balances.slice(0, 4);
-          list.innerHTML = items.map(function (b) {
-            return '<div class="balance-row">'
-              + '<span class="cell-asset">' + (b.symbol || b.denom) + '</span>'
-              + '<span class="cell-amount">' + (b.amount || '0') + '</span>'
-              + '</div>';
-          }).join('');
-        } else {
-          list.innerHTML = '<p class="loading">No balances</p>';
-        }
-      })
-      .catch(function () {
-        list.innerHTML = '<p class="loading">Failed to load</p>';
-      });
-  }
-
-  var recommendForm = document.getElementById('recommend-form');
-  if (recommendForm) {
-    recommendForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var address = getAddress();
-      if (!address) {
-        showToast('Connect wallet first', 'error');
-        return;
-      }
-      var msgEl = document.getElementById('recommend-message');
-      var message = (msgEl && msgEl.value) ? msgEl.value.trim() : '';
-      var list = document.getElementById('recommendations-list');
-      if (list) list.innerHTML = '<p class="loading">Getting recommendations…</p>';
-      fetch('/api/recommend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: address, message: message })
-      })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          var recs = data.recommendations || [];
-          if (!list) return;
-          if (recs.length === 0) {
-            list.innerHTML = '<p class="loading">No recommendations</p>';
-            return;
-          }
-          var maxRecs = recs.slice(0, 2);
-          list.innerHTML = maxRecs.map(function (r) {
-            var html = '<div class="rec-item" data-action-id="' + (r.id || '') + '"><h4>' + (r.title || r.id) + '</h4><p>' + (r.description || '') + '</p>';
-            var encodedParams = encodeURIComponent(JSON.stringify(r.params || {}));
-            html += '<button type="button" class="btn btn-primary btn-execute" data-action-id="' + (r.id || '') + '" data-action-params="' + encodedParams + '">Execute</button></div>';
-            return html;
-          }).join('');
-          list.querySelectorAll('.btn-execute').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-              var actionId = btn.getAttribute('data-action-id');
-              var params = {};
-              var rawParams = btn.getAttribute('data-action-params');
-              if (rawParams) {
-                try {
-                  params = JSON.parse(decodeURIComponent(rawParams));
-                } catch (_) {}
-              }
-              executeIntent(actionId, params);
-            });
-          });
-        })
-        .catch(function () {
-          if (list) list.innerHTML = '<p class="loading">Request failed</p>';
-          showToast('Recommend request failed', 'error');
-        });
-    });
-  }
-
-  function executeIntent(actionId, params) {
-    var address = getAddress();
-    if (!address) {
-      showToast('Connect wallet first', 'error');
-      return;
-    }
-    fetch('/api/execute-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: address, action_id: actionId, params: params || {} })
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (payload) {
-        var demo = payload.demo_execution || {};
-        if (demo.applied) {
-          showToast(demo.message || 'Action executed in demo mode', 'success');
-          loadBalances();
           return;
         }
-        // In production: pass payload to InterwovenKit to sign/send.
-        showToast('TX payload ready — sign in wallet (InterwovenKit)', 'success');
+        list.innerHTML = items.map(function (o) {
+          return '<div class="rec-item"><span class="cell-pair">' + (o.name || o.id) + '</span><span class="cell-apy">' + (o.apy || '--') + '%</span><span class="cell-risk">' + (o.risk || 'n/a') + '</span></div>';
+        }).join('');
+        drawOpportunitiesChart(items);
       })
       .catch(function () {
-        showToast('Execute failed', 'error');
+        list.innerHTML = '<p class="loading">Failed to load</p>';
       });
-  }
-
-  var btnBridge = document.getElementById('btn-bridge');
-  var bridgeForm = document.getElementById('bridge-form');
-  var btnBridgePreview = document.getElementById('btn-bridge-preview');
-  var bridgeSummary = document.getElementById('bridge-summary');
-
-  function bridgeValues() {
-    var fromChain = document.getElementById('bridge-from-chain');
-    var asset = document.getElementById('bridge-asset');
-    var amount = document.getElementById('bridge-amount');
-    var destination = document.getElementById('bridge-destination');
-    return {
-      from_chain: fromChain ? fromChain.value : '',
-      asset: asset ? asset.value : '',
-      amount: amount ? amount.value : '',
-      destination: destination ? destination.value.trim() : ''
-    };
-  }
-
-  function renderBridgeSummary(values) {
-    if (!bridgeSummary) return;
-    bridgeSummary.classList.add('ready');
-    bridgeSummary.textContent =
-      'You will bridge ' + values.amount + ' ' + values.asset + ' from '
-      + values.from_chain + ' to ' + values.destination + '.';
-  }
-
-  function validateBridge(values) {
-    var numericAmount = Number(values.amount);
-    if (!values.destination) return 'Destination address is required';
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return 'Amount must be greater than 0';
-    return '';
-  }
-
-  if (btnBridgePreview) {
-    btnBridgePreview.addEventListener('click', function () {
-      var values = bridgeValues();
-      var error = validateBridge(values);
-      if (error) {
-        showToast(error, 'error');
-        return;
-      }
-      renderBridgeSummary(values);
-      showToast('Bridge preview ready', 'success');
-    });
-  }
-
-  if (bridgeForm) {
-    bridgeForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var address = getAddress();
-      if (!address) {
-        showToast('Connect wallet first', 'error');
-        return;
-      }
-      var values = bridgeValues();
-      var error = validateBridge(values);
-      if (error) {
-        showToast(error, 'error');
-        return;
-      }
-      fetch('/api/execute-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address: address,
-          action_id: 'bridge_in',
-          params: values
-        })
-      })
-        .then(function (r) { return r.json(); })
-        .then(function () {
-          renderBridgeSummary(values);
-          showToast('Bridge transaction prepared. Confirm in wallet.', 'success');
-        })
-        .catch(function () {
-          showToast('Bridge preparation failed', 'error');
-        });
-    });
-  }
-
-  var btnHelpOpen = document.getElementById('btn-help-open');
-  var btnHelpClose = document.getElementById('btn-help-close');
-  var helpModal = document.getElementById('help-modal');
-  if (btnHelpOpen && helpModal) {
-    btnHelpOpen.addEventListener('click', function () {
-      helpModal.classList.remove('hidden');
-    });
-  }
-  if (btnHelpClose && helpModal) {
-    btnHelpClose.addEventListener('click', function () {
-      helpModal.classList.add('hidden');
-    });
-  }
-  if (helpModal) {
-    helpModal.addEventListener('click', function (e) {
-      if (e.target === helpModal) helpModal.classList.add('hidden');
-    });
-  }
-
-  function syncBridgeDestination() {
-    var destinationInput = document.getElementById('bridge-destination');
-    if (!destinationInput) return;
-    destinationInput.value = getAddress() || '';
-  }
-
-  if (btnBridge) {
-    syncBridgeDestination();
   }
 
   window.addEventListener('yieldmind:wallet-connected', loadBalances);
-  window.addEventListener('yieldmind:wallet-connected', syncBridgeDestination);
-  window.addEventListener('yieldmind:wallet-error', function (e) {
-    var msg = (e && e.detail && e.detail.message) ? e.detail.message : 'Wallet connection failed';
-    showToast(msg, 'error');
-  });
-  window.addEventListener('yieldmind:wallet-disconnected', function () {
-    var list = document.getElementById('balances-list');
-    if (list) {
-      list.textContent = 'Connect wallet to see balance';
-      list.className = 'dashboard__list dashboard__list--compact';
-    }
-    syncBridgeDestination();
-  });
-
-  loadOpportunities();
+  window.addEventListener('yieldmind:wallet-disconnected', loadBalances);
   loadBalances();
+  loadOpportunities();
 })();

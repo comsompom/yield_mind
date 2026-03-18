@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}AI Recommendations{% endblock %}
+{% block html_class %}page-dashboard page-recommendations{% endblock %}
+{% block body_class %}page-dashboard page-recommendations{% endblock %}
+
+{% block content %}
+<section class="recommendations">
+  <div class="recommendations__left">
+    <h2 class="dashboard__card-title">Ask for recommendations</h2>
+    <form id="recommend-form" class="dashboard__form">
+      <input type="text" id="recommend-message" name="message" placeholder="e.g. low risk only" class="dashboard__input" aria-label="Your preference">
+      <button type="submit" class="btn btn-primary">Suggest</button>
+    </form>
+    <p class="dashboard__prompt-hint muted">Examples: "low risk only", "best APY under medium risk", "stablecoin strategy".</p>
+    <div id="recommendation-examples" class="rec-examples">
+      <button type="button" class="rec-example" data-prompt="low risk only">low risk only</button>
+      <button type="button" class="rec-example" data-prompt="best APY under medium risk">best APY under medium risk</button>
+      <button type="button" class="rec-example" data-prompt="stablecoin strategy with low volatility">stablecoin strategy with low volatility</button>
+      <button type="button" class="rec-example" data-prompt="rebalance to 60% low risk and 40% medium risk">rebalance 60/40 low-medium risk</button>
+    </div>
+    <div id="recommendations-list" class="dashboard__rec-list"></div>
+  </div>
+
+  <div class="recommendations__right">
+    <h2 class="dashboard__card-title">Prediction chart (why this recommendation)</h2>
+    <canvas id="prediction-chart" class="dashboard__chart" width="1200" height="280" aria-label="Prediction chart"></canvas>
+    <p id="prediction-note" class="muted">Submit a recommendation prompt to see the trend justification.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/recommendations.js', v='20260317n') }}" defer></script>
+{% endblock %}
+

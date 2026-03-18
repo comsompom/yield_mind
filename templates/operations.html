@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Operations{% endblock %}
+{% block html_class %}page-dashboard page-operations{% endblock %}
+{% block body_class %}page-dashboard page-operations{% endblock %}
+
+{% block content %}
+<section class="operations">
+  <div class="ops-tabs">
+    <button type="button" class="ops-tab active" data-tab="send">Send to address</button>
+    <button type="button" class="ops-tab" data-tab="receive">Receive</button>
+    <button type="button" class="ops-tab" data-tab="bridge">Bridge</button>
+    <button type="button" class="ops-tab" data-tab="history">Transaction history</button>
+  </div>
+
+  <div class="ops-panel active" data-panel="send">
+    <h2 class="dashboard__card-title">Send to address</h2>
+    <form id="send-form" class="send-form">
+      <input id="send-to-address" class="dashboard__input" type="text" placeholder="Recipient init1... address">
+      <div class="send-row">
+        <input id="send-amount" class="dashboard__input" type="number" min="0" step="0.000001" placeholder="Amount in INIT">
+        <button type="submit" id="btn-send" class="btn btn-primary">Send</button>
+      </div>
+    </form>
+    <div class="send-result">
+      <span id="send-tx-hash" class="muted">Tx hash will appear here</span>
+      <button type="button" id="btn-open-explorer" class="btn btn-outline" disabled>Open in Explorer</button>
+    </div>
+  </div>
+
+  <div class="ops-panel" data-panel="receive">
+    <h2 class="dashboard__card-title">Receive</h2>
+    <p class="dashboard__card-desc">Share your wallet address so someone can send tokens to you.</p>
+    <ol class="receive-steps">
+      <li>Connect your wallet in the top-right if it is not connected yet.</li>
+      <li>Copy your address below and share it with the sender.</li>
+      <li>Ask the sender to use INIT network and paste your full `init1...` address.</li>
+      <li>After transfer, check status in <strong>Transaction history</strong>.</li>
+    </ol>
+    <div class="receive-address-card">
+      <span class="receive-address-label">Your current wallet address</span>
+      <code id="receive-wallet-address" class="receive-address-value">Connect wallet to view address</code>
+      <button type="button" id="btn-copy-receive" class="btn btn-outline" disabled>Copy address</button>
+    </div>
+  </div>
+
+  <div class="ops-panel" data-panel="bridge">
+    <h2 class="dashboard__card-title">Bridge</h2>
+    <p class="dashboard__card-desc">Move assets to Initia testnet in 3 quick steps.</p>
+    <form id="bridge-form" class="bridge-form">
+      <div class="bridge-row">
+        <label class="bridge-label" for="bridge-from-chain">From</label>
+        <select id="bridge-from-chain" class="dashboard__input bridge-select">
+          <option value="ethereum">Ethereum</option>
+          <option value="arbitrum">Arbitrum</option>
+          <option value="cosmoshub">Cosmos Hub</option>
+        </select>
+        <label class="bridge-label" for="bridge-asset">Asset</label>
+        <select id="bridge-asset" class="dashboard__input bridge-select">
+          <option value="USDC">USDC</option>
+          <option value="INIT">INIT</option>
+        </select>
+      </div>
+      <div class="bridge-row">
+        <label class="bridge-label" for="bridge-amount">Amount</label>
+        <input id="bridge-amount" class="dashboard__input" type="number" min="0" step="0.0001" placeholder="0.00">
+        <label class="bridge-label" for="bridge-destination">To</label>
+        <input id="bridge-destination" class="dashboard__input" type="text" placeholder="Initia address">
+      </div>
+      <div class="bridge-actions">
+        <button type="button" id="btn-bridge-preview" class="btn btn-outline">Preview</button>
+        <button type="submit" id="btn-bridge" class="btn btn-primary">Bridge in</button>
+      </div>
+    </form>
+    <div id="bridge-summary" class="bridge-summary muted">Fill bridge details, then click Preview.</div>
+  </div>
+
+  <div class="ops-panel" data-panel="history">
+    <h2 class="dashboard__card-title">Transaction history</h2>
+    <div id="tx-history-list" class="tx-history">
+      <p class="loading">Connect wallet to load history.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/operations.js', v='20260317q') }}" defer></script>
+{% endblock %}
+

@@ -48,6 +48,45 @@ function WalletBar() {
     }
   }, [address, username]);
 
+  useEffect(() => {
+    window.yieldmindWalletApi = {
+      getAddress: () => address || "",
+      openWallet: () => {
+        if (kit?.openWallet) kit.openWallet();
+      },
+      sendToken: async ({ toAddress, amountUinit, memo }) => {
+        if (!address) {
+          throw new Error("Wallet is not connected");
+        }
+        if (!kit?.requestTxBlock) {
+          throw new Error("Wallet transaction API is not ready");
+        }
+        const messages = [
+          {
+            typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+            value: {
+              fromAddress: address,
+              toAddress,
+              amount: [{ amount: String(amountUinit), denom: "uinit" }],
+            },
+          },
+        ];
+        const result = await kit.requestTxBlock({
+          messages,
+          memo: memo || "YieldMind send",
+        });
+        const txHash = result?.transactionHash || result?.txHash || "";
+        if (!txHash) {
+          throw new Error("Transaction sent but hash was not returned");
+        }
+        return { txHash, raw: result };
+      },
+    };
+    return () => {
+      window.yieldmindWalletApi = null;
+    };
+  }, [address, kit]);
+
   const onConnect = async () => {
     setConnectError("");
     if (kit?.openConnect) {
