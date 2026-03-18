@@ -1,5 +1,7 @@
 # YieldMind — AI-Powered Yield Optimization on Initia
 
+![YieldMind Logo](./yeldmind_logo.jpg)
+
 **Initia Hackathon (Season 1)** · Primary track: **AI & Tooling** · Secondary: **DeFi**
 
 ## Problem
