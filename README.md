@@ -4,6 +4,10 @@
 
 **Initia Hackathon (Season 1)** · Primary track: **AI & Tooling** · Secondary: **DeFi**
 
+## Video Demo
+
+- [YieldMind Hackathon Demo (YouTube)](https://www.youtube.com/watch?v=6bBQozSvZzA)
+
 ## Problem
 
 Users hold assets on Initia (and bridged from other chains) but don’t know where to deploy for best risk-adjusted yield or how to rebalance without manual work.
