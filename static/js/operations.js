@@ -186,7 +186,10 @@
 
   var bridgeForm = document.getElementById('bridge-form');
   var btnBridgePreview = document.getElementById('btn-bridge-preview');
+  var btnBridgeAi = document.getElementById('btn-bridge-ai');
   var bridgeSummary = document.getElementById('bridge-summary');
+  var bridgeAiBox = document.getElementById('bridge-ai-box');
+  var currentBridgeSuggestion = null;
 
   function bridgeValues() {
     return {
@@ -201,6 +204,44 @@
     if (!bridgeSummary) return;
     bridgeSummary.classList.add('ready');
     bridgeSummary.textContent = 'You will bridge ' + values.amount + ' ' + values.asset + ' from ' + values.from_chain + ' to ' + values.destination + '.';
+  }
+
+  function renderBridgeSuggestion(suggestion) {
+    if (!bridgeAiBox) return;
+    if (!suggestion || !suggestion.best_route) {
+      bridgeAiBox.classList.remove('ready');
+      bridgeAiBox.innerHTML = 'AI route suggestion will appear here.';
+      return;
+    }
+    currentBridgeSuggestion = suggestion;
+    var best = suggestion.best_route;
+    var alternatives = suggestion.alternatives || [];
+    var altText = alternatives.map(function (a) {
+      return a.from_chain + ' ($' + a.estimated_fee_usd + ', ' + a.estimated_eta_min + 'm)';
+    }).join(' | ');
+    bridgeAiBox.classList.add('ready');
+    bridgeAiBox.innerHTML =
+      '<div><strong>Best route:</strong> ' + best.from_chain
+      + ' · Fee ~$' + best.estimated_fee_usd
+      + ' · ETA ' + best.estimated_eta_min + 'm'
+      + ' · Confidence ' + Math.round((best.confidence || 0) * 100) + '%</div>'
+      + '<div class="muted">' + (suggestion.explanation || '') + '</div>'
+      + '<div class="muted">Alternatives: ' + (altText || 'n/a') + '</div>'
+      + '<div><button type="button" id="btn-apply-bridge-ai" class="btn btn-outline">Apply AI route</button></div>';
+
+    var btnApply = document.getElementById('btn-apply-bridge-ai');
+    if (btnApply) {
+      btnApply.addEventListener('click', function () {
+        if (!currentBridgeSuggestion || !currentBridgeSuggestion.best_route) return;
+        var route = currentBridgeSuggestion.best_route;
+        var fromSelect = document.getElementById('bridge-from-chain');
+        var assetSelect = document.getElementById('bridge-asset');
+        if (fromSelect) fromSelect.value = route.from_chain;
+        if (assetSelect) assetSelect.value = route.asset;
+        showToast('AI route applied to bridge form', 'success');
+        renderBridgeSummary(bridgeValues());
+      });
+    }
   }
 
   function validateBridge(values) {
@@ -220,6 +261,36 @@
       }
       renderBridgeSummary(values);
       showToast('Bridge preview ready', 'success');
+    });
+  }
+
+  if (btnBridgeAi) {
+    btnBridgeAi.addEventListener('click', function () {
+      var values = bridgeValues();
+      var error = validateBridge(values);
+      if (error) {
+        showToast(error, 'error');
+        return;
+      }
+      fetch('/api/bridge-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from_chain: values.from_chain,
+          asset: values.asset,
+          amount: values.amount,
+          destination: values.destination,
+          preference: 'balanced'
+        })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (suggestion) {
+          renderBridgeSuggestion(suggestion);
+          showToast('AI route suggestion generated', 'success');
+        })
+        .catch(function () {
+          showToast('AI route suggestion failed', 'error');
+        });
     });
   }
 
@@ -310,6 +381,10 @@
         list.innerHTML = rows.map(function (tx) {
           var statusClass = tx.status === 'success' ? 'tx-success' : (tx.status === 'failed' ? 'tx-failed' : 'tx-pending');
           var hasExplorerLink = tx.network === 'onchain' && !!tx.tx_hash;
+          var bridgeStage = '';
+          if (tx.kind === 'bridge') {
+            bridgeStage = inferBridgeStage(tx);
+          }
           var hashHtml = hasExplorerLink
             ? '<a href="https://scan.testnet.initia.xyz/txs/' + encodeURIComponent(tx.tx_hash) + '" target="_blank" rel="noopener noreferrer">' + tx.tx_hash.slice(0, 18) + '...</a>'
             : '<span class="muted">' + (tx.network === 'demo' ? 'simulated' : (tx.network === 'pending' ? 'indexing...' : (tx.network === 'external' ? 'in wallet flow' : '-'))) + '</span>';
@@ -317,13 +392,27 @@
             + '<span>' + (tx.kind || '-') + '</span>'
             + '<span class="' + statusClass + '">' + (tx.status || '-') + '</span>'
             + '<span>' + hashHtml + '</span>'
-            + '<span class="muted">' + (tx.time || '-') + '</span>'
+            + '<span class="muted">' + (tx.time || '-') + (bridgeStage ? (' · ' + bridgeStage) : '') + '</span>'
             + '</div>';
         }).join('');
       })
       .catch(function () {
         list.innerHTML = '<p class="loading">Failed to load history.</p>';
       });
+  }
+
+  function inferBridgeStage(tx) {
+    if (!tx || tx.kind !== 'bridge') return '';
+    if (tx.network === 'demo') return 'demo simulated';
+    if (tx.status === 'failed') return 'failed';
+    if (tx.network === 'onchain') return 'completed on destination';
+    var when = tx.time ? Date.parse(tx.time) : NaN;
+    if (!Number.isFinite(when)) return 'waiting for confirmation';
+    var elapsedSec = Math.max(0, Math.floor((Date.now() - when) / 1000));
+    if (elapsedSec < 30) return 'submitted to wallet';
+    if (elapsedSec < 120) return 'source tx confirming';
+    if (elapsedSec < 360) return 'relay in progress';
+    return 'awaiting destination receipt';
   }
 
   function syncBridgeDestination() {

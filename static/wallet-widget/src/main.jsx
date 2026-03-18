@@ -97,6 +97,9 @@ function WalletBar() {
         const srcChainMap = {
           ethereum: "1",
           arbitrum: "42161",
+          base: "8453",
+          optimism: "10",
+          polygon: "137",
           cosmoshub: "cosmoshub-4",
         };
 

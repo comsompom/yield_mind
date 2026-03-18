@@ -52,6 +52,9 @@
         <select id="bridge-from-chain" class="dashboard__input bridge-select">
           <option value="ethereum">Ethereum</option>
           <option value="arbitrum">Arbitrum</option>
+          <option value="base">Base</option>
+          <option value="optimism">Optimism</option>
+          <option value="polygon">Polygon</option>
           <option value="cosmoshub">Cosmos Hub</option>
         </select>
         <label class="bridge-label" for="bridge-asset">Asset</label>
@@ -68,10 +71,12 @@
       </div>
       <div class="bridge-actions">
         <button type="button" id="btn-bridge-preview" class="btn btn-outline">Preview</button>
+        <button type="button" id="btn-bridge-ai" class="btn btn-outline">AI Suggest Route</button>
         <button type="submit" id="btn-bridge" class="btn btn-primary">Bridge in</button>
       </div>
     </form>
     <div id="bridge-summary" class="bridge-summary muted">Fill bridge details, then click Preview.</div>
+    <div id="bridge-ai-box" class="bridge-ai-box muted">AI route suggestion will appear here.</div>
   </div>
 
   <div class="ops-panel" data-panel="history">
@@ -84,6 +89,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/operations.js', v='20260317s') }}" defer></script>
+<script src="{{ url_for('static', filename='js/operations.js', v='20260317t') }}" defer></script>
 {% endblock %}
 

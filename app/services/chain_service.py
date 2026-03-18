@@ -244,3 +244,83 @@ def lookup_tx_on_testnet(tx_hash: str) -> dict:
         return {"exists": False, "reason": f"http_{exc.code}"}
     except Exception:
         return {"exists": False, "reason": "lookup_failed"}
+
+
+def suggest_bridge_route(params: dict) -> dict:
+    """Return route candidates and best route for bridge-in."""
+    from_chain = str(params.get("from_chain", "ethereum")).lower()
+    asset = str(params.get("asset", "USDC")).upper()
+    amount_raw = str(params.get("amount", "0")).strip()
+    preference = str(params.get("preference", "balanced")).lower()
+    try:
+        amount = max(float(amount_raw), 0.0)
+    except (TypeError, ValueError):
+        amount = 0.0
+
+    route_db = {
+        "ethereum": {"fee_base": 4.8, "eta_min": 18, "reliability": 0.99},
+        "arbitrum": {"fee_base": 1.7, "eta_min": 7, "reliability": 0.98},
+        "base": {"fee_base": 1.4, "eta_min": 6, "reliability": 0.98},
+        "optimism": {"fee_base": 1.6, "eta_min": 8, "reliability": 0.97},
+        "polygon": {"fee_base": 0.9, "eta_min": 9, "reliability": 0.96},
+        "cosmoshub": {"fee_base": 0.6, "eta_min": 11, "reliability": 0.95},
+    }
+    assets_multiplier = {"USDC": 1.0, "INIT": 0.85}
+    selected = route_db.get(from_chain, route_db["ethereum"])
+    all_routes = []
+    for chain, data in route_db.items():
+        multiplier = assets_multiplier.get(asset, 1.0)
+        liquidity_penalty = 0.002 * amount
+        fee_usd = round((data["fee_base"] * multiplier) + liquidity_penalty, 2)
+        eta = int(data["eta_min"] + min(amount / 250, 12))
+        confidence = max(0.72, min(0.995, data["reliability"] - (amount / 50000)))
+        score = 0.0
+        if preference == "cost":
+            score = 100 - (fee_usd * 8) - eta
+        elif preference == "speed":
+            score = 100 - (eta * 3) - (fee_usd * 2)
+        else:
+            score = (confidence * 100) - (fee_usd * 4) - (eta * 1.2)
+        all_routes.append(
+            {
+                "from_chain": chain,
+                "asset": asset,
+                "estimated_fee_usd": fee_usd,
+                "estimated_eta_min": eta,
+                "confidence": round(confidence, 3),
+                "score": round(score, 3),
+            }
+        )
+    all_routes.sort(key=lambda r: r["score"], reverse=True)
+
+    preferred_route = next((r for r in all_routes if r["from_chain"] == from_chain), None)
+    best_route = all_routes[0] if all_routes else preferred_route
+    chosen = best_route or preferred_route or {
+        "from_chain": from_chain,
+        "asset": asset,
+        "estimated_fee_usd": 0.0,
+        "estimated_eta_min": 0,
+        "confidence": 0.72,
+        "score": 0.0,
+    }
+
+    why = (
+        f"{chosen['from_chain']} has the best combined score for {asset} "
+        f"considering fee (${chosen['estimated_fee_usd']}) and ETA ({chosen['estimated_eta_min']}m)."
+    )
+    return {
+        "input": {
+            "from_chain": from_chain,
+            "asset": asset,
+            "amount": amount_raw,
+            "preference": preference,
+        },
+        "best_route": chosen,
+        "selected_route": preferred_route,
+        "alternatives": all_routes[:3],
+        "explanation": why,
+        "prediction": {
+            "success_probability": chosen["confidence"],
+            "expected_minutes": chosen["estimated_eta_min"],
+        },
+    }

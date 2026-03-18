@@ -96,3 +96,10 @@ def tx_lookup():
     if not tx_hash:
         return jsonify({"error": "tx_hash required"}), 400
     return jsonify(chain_service.lookup_tx_on_testnet(tx_hash))
+
+
+@bp.route("/bridge-suggest", methods=["POST"])
+def bridge_suggest():
+    """POST /api/bridge-suggest — AI-like route scoring for bridge input."""
+    body = request.get_json(silent=True) or {}
+    return jsonify(chain_service.suggest_bridge_route(body))
