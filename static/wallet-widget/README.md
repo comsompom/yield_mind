@@ -27,6 +27,11 @@ This keeps rebuilding `static/js/wallet-bridge.js` on changes.
 ## Notes
 
 - The widget uses `@initia/interwovenkit-react` with `TESTNET`.
+- Exposed browser API (`window.yieldmindWalletApi`):
+  - `getAddress()`
+  - `openWallet()`
+  - `sendToken({ toAddress, amountUinit, memo })`
+  - `openBridgeIn({ fromChain, asset, amount, destination })`
 - It dispatches existing dashboard events:
   - `yieldmind:wallet-connected`
   - `yieldmind:wallet-disconnected`

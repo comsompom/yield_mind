@@ -12,7 +12,7 @@ YieldMind is an AI assistant that:
 
 1. **Analyzes** wallet and market data (APYs, risks, liquidity).
 2. **Suggests** optimal actions in plain language (e.g. “Move 30% of USDC to Pool X for 12% APY”).
-3. **Lets users execute** in one click via InterwovenKit (and optional session/auto-sign UX).
+3. **Lets users execute** via InterwovenKit with real wallet signing (send + bridge modal flow).
 4. **Captures revenue** via a small fee on executed actions and optional premium features.
 
 ## Features (Initia-native)
@@ -20,6 +20,8 @@ YieldMind is an AI assistant that:
 - **InterwovenKit** — Wallet connection and all transactions (required).
 - **Initia Usernames (.init)** — Identity and shareable profile (e.g. yieldmind.init).
 - **Interwoven Bridge** — Onboard from other ecosystems and move assets into YieldMind’s recommendations without leaving the app.
+- **Operations Workspace** — Send, Receive, Bridge, and Transaction History in dedicated tabs.
+- **AI Bridge Assistant** — Suggests best bridge route (fee, ETA, confidence) and applies it to the bridge form.
 
 ## Tech Stack
 
@@ -147,11 +149,25 @@ gunicorn -w 4 "run:app"
 
 - **Home:** http://127.0.0.1:5000/
 - **Dashboard:** http://127.0.0.1:5000/dashboard
+- **Operations:** http://127.0.0.1:5000/operations
+- **AI Recommendations:** http://127.0.0.1:5000/recommendations
+- **How to use:** http://127.0.0.1:5000/how-to-use
 - **Health:** http://127.0.0.1:5000/health
+
+### Run unit tests
+
+```bash
+python -m pytest
+```
+
+Current tests cover:
+
+- API validation and response contracts (`/api/balances`, `/api/bridge-suggest`, `/api/tx-history`, `/api/tx-lookup`)
+- Core service logic (payload building, bridge suggestion scoring, demo execution balance updates)
 
 ### Wallet widget (InterwovenKit)
 
-The repo includes a **demo** wallet bar (fake address in localStorage) so you can run the UI and API without the React stack. For submission, replace it with the real **InterwovenKit** integration: see `static/wallet-widget/README.md`. Build the minimal React widget and include the bundle in the Flask app for connect, .init name, and sign/send.
+The app uses a real **InterwovenKit** React wallet widget (bundled into `static/js/wallet-bridge.js`) for connect/disconnect, address identity, send tx signing, and bridge modal flow. See `static/wallet-widget/README.md` for local rebuild instructions.
 
 ### Wallet setup (hackathon)
 
@@ -176,8 +192,8 @@ Troubleshooting:
 
 - **Rollup / appchain:** Valid chain ID and a transaction link or deployment link (fill in README and `.initia/submission.json` after deployment).
 - **InterwovenKit:** All wallet connect and transactions must go through `@initia/interwovenkit-react`.
-- **Initia-native:** Interwoven Bridge + Initia Usernames (.init) + (optional) session/auto-sign.
-- **Repo:** `.initia/submission.json`, this README, and a **demo video** (2–5 min: problem, connect → recommend → execute → bridge, revenue angle).
+- **Initia-native:** Interwoven Bridge + Initia Usernames (.init) + AI route guidance for bridge UX.
+- **Repo:** `.initia/submission.json`, this README, and a **demo video** (2–5 min: connect -> dashboard insight -> recommendations -> operations send/bridge -> tx history).
 
 Fill in `.initia/submission.json` with: `repo_url`, `live_app_url`, `demo_video_url`, `chain_id`, and `team`.
 

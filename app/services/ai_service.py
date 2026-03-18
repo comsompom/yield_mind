@@ -7,7 +7,7 @@ from app.services import chain_service
 def get_recommendations(address: str, message: str = "") -> list:
     """
     Propose 1–3 concrete actions (e.g. deposit to pool X) with explanation and risk.
-    Uses LLM when API key is set; otherwise returns deterministic stub.
+    Uses LLM when API key is set; otherwise returns deterministic fallback suggestions.
     """
     wallet = chain_service.get_balances(address)
     opportunities = chain_service.get_opportunities()
@@ -15,11 +15,11 @@ def get_recommendations(address: str, message: str = "") -> list:
     api_key = current_app.config.get("OPENAI_API_KEY")
     if api_key and message:
         return _recommend_via_llm(wallet, opportunities, message)
-    return _recommend_stub(wallet, opportunities, message)
+    return _recommend_fallback(wallet, opportunities, message)
 
 
-def _recommend_stub(wallet: dict, opportunities: list, message: str) -> list:
-    """Stub recommendations when no LLM or empty message."""
+def _recommend_fallback(wallet: dict, opportunities: list, message: str) -> list:
+    """Deterministic fallback recommendations when no LLM or empty message."""
     recs = []
     for i, opp in enumerate(opportunities[:3]):
         recs.append({
@@ -51,7 +51,7 @@ def _recommend_via_llm(wallet: dict, opportunities: list, message: str) -> list:
         text = response.choices[0].message.content or ""
         return _parse_llm_recommendations(text, opportunities)
     except Exception:
-        return _recommend_stub(wallet, opportunities, message)
+        return _recommend_fallback(wallet, opportunities, message)
 
 
 def _build_prompt(wallet: dict, opportunities: list, message: str) -> str:
@@ -99,4 +99,4 @@ def _parse_llm_recommendations(text: str, opportunities: list) -> list:
             "risk": risk,
             "params": {"pool_id": action_id, "amount_pct": 30},
         })
-    return recs if recs else _recommend_stub({"balances": []}, opportunities, "")
+    return recs if recs else _recommend_fallback({"balances": []}, opportunities, "")

@@ -12,6 +12,24 @@ from flask import current_app
 # balance changes after "Execute" actions even before real chain integration.
 _DEMO_PORTFOLIOS: dict[str, dict[str, int]] = {}
 _TX_HISTORY: dict[str, list[dict]] = {}
+_OPPORTUNITIES: list[dict] = [
+    {
+        "id": "pool_staking_1",
+        "name": "Initia Staking",
+        "apy": "12.5",
+        "risk": "low",
+        "tvl": "1.2M",
+        "action": "stake",
+    },
+    {
+        "id": "pool_lp_1",
+        "name": "INIT/USDC LP",
+        "apy": "18.2",
+        "risk": "medium",
+        "tvl": "450K",
+        "action": "add_liquidity",
+    },
+]
 
 
 def _get_portfolio(address: str) -> dict[str, int]:
@@ -44,6 +62,16 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _parse_amount_uinit(value: object, default: int = 0) -> int:
+    text = str(value or "").strip()
+    if not text:
+        return default
+    try:
+        return max(int(float(text) * 1_000_000), 0)
+    except (TypeError, ValueError):
+        return default
+
+
 def get_balances(address: str) -> dict:
     """Aggregated balances for address (from RPC/indexer). Returns normalized dict."""
     portfolio = _get_portfolio(address)
@@ -59,25 +87,7 @@ def get_balances(address: str) -> dict:
 
 def get_opportunities() -> list:
     """Current top yield opportunities (pools, APYs, risk)."""
-    # TODO: fetch from indexer/API; for now return stub
-    return [
-        {
-            "id": "pool_staking_1",
-            "name": "Initia Staking",
-            "apy": "12.5",
-            "risk": "low",
-            "tvl": "1.2M",
-            "action": "stake",
-        },
-        {
-            "id": "pool_lp_1",
-            "name": "INIT/USDC LP",
-            "apy": "18.2",
-            "risk": "medium",
-            "tvl": "450K",
-            "action": "add_liquidity",
-        },
-    ]
+    return [dict(item) for item in _OPPORTUNITIES]
 
 
 def get_opportunity_history() -> dict:
@@ -102,13 +112,57 @@ def get_opportunity_history() -> dict:
 
 def build_execute_payload(address: str, action_id: str, params: dict) -> dict:
     """Build encoded TX payload for wallet (InterwovenKit) to sign/send."""
-    # TODO: use Initia SDK to build real Msg; return serialized payload
+    action = str(action_id)
+    amount_uinit = _parse_amount_uinit(params.get("amount"), default=100_000)
+    msgs: list[dict] = []
+
+    if action in ("pool_staking_1", "stake_init"):
+        validator = str(params.get("validator", "initvaloper1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5f4n2"))
+        msgs.append(
+            {
+                "typeUrl": "/cosmos.staking.v1beta1.MsgDelegate",
+                "value": {
+                    "delegatorAddress": address,
+                    "validatorAddress": validator,
+                    "amount": {"denom": "uinit", "amount": str(max(amount_uinit, 1))},
+                },
+            }
+        )
+    elif action in ("pool_lp_1", "add_liquidity"):
+        msgs.append(
+            {
+                "typeUrl": "/initia.dex.v1.MsgAddLiquidity",
+                "value": {
+                    "sender": address,
+                    "poolId": str(params.get("pool_id", "pool_lp_1")),
+                    "tokenA": {"denom": "uinit", "amount": str(max(amount_uinit, 1))},
+                    "tokenB": {"denom": "uusdc", "amount": str(max(amount_uinit, 1))},
+                },
+            }
+        )
+    elif action == "bridge_in":
+        asset = str(params.get("asset", "USDC")).upper()
+        denom = "uusdc" if asset == "USDC" else "uinit"
+        destination = str(params.get("destination", address)).strip() or address
+        from_chain = str(params.get("from_chain", "ethereum")).lower()
+        msgs.append(
+            {
+                "typeUrl": "/initia.bridge.v1.MsgBridgeTransfer",
+                "value": {
+                    "sender": address,
+                    "receiver": destination,
+                    "sourceChain": from_chain,
+                    "amount": {"denom": denom, "amount": str(max(amount_uinit, 1))},
+                },
+            }
+        )
+
     return {
         "chain_id": current_app.config.get("CHAIN_ID", "initiation-2"),
         "payload": {
             "type": "cosmos-sdk/StdTx",
             "value": {
-                "msgs": [],
+                "msgs": msgs,
                 "fee": {"amount": [], "gas": "200000"},
                 "memo": f"YieldMind action:{action_id}",
             },
