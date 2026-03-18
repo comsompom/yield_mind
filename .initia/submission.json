@@ -1,10 +1,10 @@
 {
   "project_name": "YieldMind",
   "track": "AI & Tooling",
-  "description": "AI-powered yield optimization and DeFi assistant on Initia. Natural-language recommendations and one-click execution via InterwovenKit; Initia Usernames (.init) and Interwoven Bridge integrated.",
+  "description": "AI-powered DeFi copilot on Initia with intent-based recommendations, wallet-native execution, and bridge route intelligence.",
   "team": [],
-  "repo_url": "",
+  "repo_url": "https://github.com/comsompom/yield_mind",
   "live_app_url": "",
-  "demo_video_url": "",
-  "chain_id": ""
+  "demo_video_url": "https://www.youtube.com/watch?v=6bBQozSvZzA",
+  "chain_id": "yieldmind-1"
 }
