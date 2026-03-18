@@ -81,6 +81,56 @@ function WalletBar() {
         }
         return { txHash, raw: result };
       },
+      openBridgeIn: async ({ fromChain, asset, amount, destination }) => {
+        if (!address) {
+          throw new Error("Wallet is not connected");
+        }
+        if (!kit?.openDeposit && !kit?.openBridge) {
+          throw new Error("Wallet bridge API is not ready");
+        }
+
+        const normalizedAsset = String(asset || "").toUpperCase();
+        const denomMap = {
+          INIT: "uinit",
+          USDC: "uusdc",
+        };
+        const srcChainMap = {
+          ethereum: "1",
+          arbitrum: "42161",
+          cosmoshub: "cosmoshub-4",
+        };
+
+        const quantity = String(amount || "").trim();
+        const recipient = String(destination || address).trim();
+        const denom = denomMap[normalizedAsset] || "uinit";
+        const srcChainId = srcChainMap[String(fromChain || "").toLowerCase()] || "";
+
+        // Prefer deposit flow for "bridge in" UX.
+        if (kit?.openDeposit) {
+          const params = {
+            denoms: [denom],
+            recipientAddress: recipient || address,
+          };
+          if (srcChainId) {
+            params.srcOptions = [{ denom, chainId: srcChainId }];
+          }
+          kit.openDeposit(params);
+          return { mode: "deposit", recipient: recipient || address, quantity };
+        }
+
+        // Fallback: open generic bridge modal with suggested defaults.
+        kit.openBridge?.({
+          srcChainId,
+          srcDenom: denom,
+          dstChainId: "initiation-2",
+          dstDenom: denom,
+          quantity,
+          sender: address,
+          recipient: recipient || address,
+          slippagePercent: "0.5",
+        });
+        return { mode: "bridge", recipient: recipient || address, quantity };
+      },
     };
     return () => {
       window.yieldmindWalletApi = null;

@@ -99,13 +99,17 @@
     lastTxHash = hash || '';
     if (!sendTxHash) return;
     sendTxHash.textContent = lastTxHash || 'Tx hash will appear here';
-    if (btnOpenExplorer) btnOpenExplorer.disabled = !lastTxHash;
+    if (btnOpenExplorer) btnOpenExplorer.disabled = false;
   }
 
   if (btnOpenExplorer) {
     btnOpenExplorer.addEventListener('click', function () {
       var url = 'https://scan.testnet.initia.xyz';
-      if (lastTxHash) url += '/txs/' + encodeURIComponent(lastTxHash);
+      if (lastTxHash) {
+        url += '/txs/' + encodeURIComponent(lastTxHash);
+      } else {
+        showToast('No tx hash yet. Opening explorer home.', 'success');
+      }
       window.open(url, '_blank', 'noopener,noreferrer');
     });
   }
@@ -143,8 +147,8 @@
         .then(function (result) {
           var txHash = result.txHash || '';
           return lookupTx(txHash).then(function (lookup) {
+            setTxHash(txHash);
             if (lookup.exists) {
-              setTxHash(txHash);
               showToast('Transaction confirmed on explorer', 'success');
               return postHistory({
                 address: from,
@@ -155,7 +159,6 @@
                 details: { to: to, amount_init: amountInput }
               });
             }
-            setTxHash('');
             showToast('Transaction submitted, but not indexed yet. Check again in 20-60 seconds.', 'success');
             return postHistory({
               address: from,
@@ -234,6 +237,35 @@
         showToast(error, 'error');
         return;
       }
+      var walletApi = window.yieldmindWalletApi;
+      if (walletApi && typeof walletApi.openBridgeIn === 'function') {
+        Promise.resolve(walletApi.openBridgeIn({
+          fromChain: values.from_chain,
+          asset: values.asset,
+          amount: values.amount,
+          destination: values.destination
+        }))
+          .then(function () {
+            renderBridgeSummary(values);
+            showToast('Bridge flow opened. Complete it in the wallet modal.', 'success');
+            return postHistory({
+              address: address,
+              kind: 'bridge',
+              status: 'pending',
+              network: 'external',
+              details: values
+            });
+          })
+          .then(loadTxHistory)
+          .catch(function (err) {
+            var msg = (err && err.message) ? err.message : 'Bridge flow failed to open';
+            showToast(msg, 'error');
+          });
+        return;
+      }
+
+      // Safety fallback for environments where bridge API is unavailable.
+      showToast('Bridge wallet flow is unavailable, using demo preparation', 'error');
       fetch('/api/execute-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -243,9 +275,7 @@
         .then(function (payload) {
           renderBridgeSummary(values);
           var demo = payload.demo_execution || {};
-          var txHash = demo.tx_hash || '';
-          if (txHash) setTxHash(txHash);
-          showToast(demo.message || 'Bridge transaction prepared', 'success');
+          showToast(demo.message || 'Bridge prepared in demo mode', 'success');
           return postHistory({
             address: address,
             kind: 'bridge',
@@ -282,7 +312,7 @@
           var hasExplorerLink = tx.network === 'onchain' && !!tx.tx_hash;
           var hashHtml = hasExplorerLink
             ? '<a href="https://scan.testnet.initia.xyz/txs/' + encodeURIComponent(tx.tx_hash) + '" target="_blank" rel="noopener noreferrer">' + tx.tx_hash.slice(0, 18) + '...</a>'
-            : '<span class="muted">' + (tx.network === 'demo' ? 'simulated' : (tx.network === 'pending' ? 'indexing...' : '-')) + '</span>';
+            : '<span class="muted">' + (tx.network === 'demo' ? 'simulated' : (tx.network === 'pending' ? 'indexing...' : (tx.network === 'external' ? 'in wallet flow' : '-'))) + '</span>';
           return '<div class="tx-row">'
             + '<span>' + (tx.kind || '-') + '</span>'
             + '<span class="' + statusClass + '">' + (tx.status || '-') + '</span>'
